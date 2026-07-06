@@ -44,6 +44,7 @@ function CheatedCampaignContent() {
   const [isMuted, setIsMuted] = useState(false); // Default unmuted (sound automatic)
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [detectedLocation, setDetectedLocation] = useState<string>('Detecting Location...');
+  const [showStartBtn, setShowStartBtn] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -63,6 +64,7 @@ function CheatedCampaignContent() {
   const introLine1Ref = useRef<HTMLHeadingElement>(null);
   const introLine2Ref = useRef<HTMLHeadingElement>(null);
   const introLine3Ref = useRef<HTMLHeadingElement>(null);
+  const startBtnRef = useRef<HTMLButtonElement>(null);
 
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -85,11 +87,14 @@ function CheatedCampaignContent() {
 
     const tl = gsap.timeline({
       onComplete: () => {
-        gsap.to(introContainerRef.current, {
+        // Fade out text lines, then show the play button to register gesture
+        gsap.to([introLine1Ref.current, introLine2Ref.current, introLine3Ref.current], {
           opacity: 0,
+          y: -20,
           duration: 0.6,
+          stagger: 0.08,
           onComplete: () => {
-            setPhase('video');
+            setShowStartBtn(true);
           }
         });
       }
@@ -112,20 +117,22 @@ function CheatedCampaignContent() {
       y: 0,
       duration: 0.8,
       ease: 'power3.out'
-    }, '+=0.3')
-    .to([introLine1Ref.current, introLine2Ref.current, introLine3Ref.current], {
-      opacity: 0,
-      y: -20,
-      duration: 0.6,
-      stagger: 0.08,
-      delay: 2.0,
-      ease: 'power3.in'
-    });
+    }, '+=0.3');
 
     return () => {
       tl.kill();
     };
   }, [phase]);
+
+  // Animate play button entrance
+  useEffect(() => {
+    if (showStartBtn && startBtnRef.current) {
+      gsap.fromTo(startBtnRef.current,
+        { opacity: 0, scale: 0.9, y: 15 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.8, ease: 'back.out(1.7)' }
+      );
+    }
+  }, [showStartBtn]);
 
   // 2. 9:16 VIDEO SETUP & AUTO-PLAY (Automatic Sound)
   useEffect(() => {
@@ -343,37 +350,57 @@ function CheatedCampaignContent() {
           ref={introContainerRef}
           className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center px-6 text-center select-none"
         >
-          <div className="max-w-xl space-y-5">
-            <h1 
-              ref={introLine1Ref}
-              className="text-lg md:text-xl text-gray-400 font-medium tracking-tight"
-            >
-              Your school
-            </h1>
-            <h2 
-              ref={introLine2Ref}
-              className="text-4xl md:text-6xl text-red-500 font-extrabold uppercase tracking-tighter"
-            >
-              Cheated on you
-            </h2>
-            <h3 
-              ref={introLine3Ref}
-              className="text-base md:text-xl text-gray-300 font-light tracking-wide leading-relaxed"
-            >
-              when it said just BBA is a safe choice because...
-            </h3>
-          </div>
+          {!showStartBtn ? (
+            <div className="max-w-xl space-y-5">
+              <h1 
+                ref={introLine1Ref}
+                className="text-lg md:text-xl text-gray-400 font-medium tracking-tight"
+              >
+                Your school
+              </h1>
+              <h2 
+                ref={introLine2Ref}
+                className="text-4xl md:text-6xl text-red-500 font-extrabold uppercase tracking-tighter"
+              >
+                Cheated on you
+              </h2>
+              <h3 
+                ref={introLine3Ref}
+                className="text-base md:text-xl text-gray-300 font-light tracking-wide leading-relaxed"
+              >
+                when it said just BBA is a safe choice because...
+              </h3>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center space-y-6">
+              <button 
+                ref={startBtnRef}
+                onClick={() => {
+                  setIsMuted(false);
+                  setPhase('video');
+                }}
+                className="bg-red-650 hover:bg-red-700 text-white px-8 py-4 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 transform hover:scale-105 shadow-xl shadow-red-600/30 cursor-pointer"
+              >
+                Reveal the Truth 🔊
+              </button>
+              <p className="text-[11px] text-gray-500 max-w-[240px] tracking-wide leading-relaxed">
+                Click to play the teaser video unmuted.
+              </p>
+            </div>
+          )}
 
           {/* Clicking this counts as interaction and enables immediate unmuted audio in next phase */}
-          <button 
-            onClick={() => {
-              setIsMuted(false); // Unmute immediately
-              setPhase('video');
-            }}
-            className="absolute bottom-8 right-8 text-[10px] tracking-widest uppercase font-semibold text-gray-500 hover:text-white transition-colors duration-200"
-          >
-            Skip Intro ➔
-          </button>
+          {!showStartBtn && (
+            <button 
+              onClick={() => {
+                setIsMuted(false); // Unmute immediately
+                setPhase('video');
+              }}
+              className="absolute bottom-8 right-8 text-[10px] tracking-widest uppercase font-semibold text-gray-500 hover:text-white transition-colors duration-200"
+            >
+              Skip Intro ➔
+            </button>
+          )}
         </div>
       )}
 
