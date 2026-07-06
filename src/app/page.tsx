@@ -5,14 +5,45 @@ import { useSearchParams } from 'next/navigation';
 import { Volume2, VolumeX, ArrowRight, CheckCircle2, AlertCircle, Sparkles, MapPin } from 'lucide-react';
 import gsap from 'gsap';
 
+interface LocationItem {
+  name: string;
+  lat: number;
+  lng: number;
+}
+
+// Predefined poster campaign locations in Pune
+const POSTER_LOCATIONS: LocationItem[] = [
+  { name: "Fergusson College Gate (FC Road)", lat: 18.5244, lng: 73.8409 },
+  { name: "Symbiosis Viman Nagar Campus", lat: 18.5636, lng: 73.9079 },
+  { name: "FC Road Cafe Coffee Day", lat: 18.5221, lng: 73.8412 },
+  { name: "ICC Trade Tower Co-working", lat: 18.5303, lng: 73.8290 },
+  { name: "Mitcon PG Hostel (Balewadi)", lat: 18.5670, lng: 73.7745 },
+  { name: "Viman Nagar Stationery Hub", lat: 18.5620, lng: 73.9168 },
+  { name: "BMCC College Notice Board", lat: 18.5283, lng: 73.8341 },
+];
+
+// Haversine formula to calculate distance in km
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Earth radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
 function CheatedCampaignContent() {
   const searchParams = useSearchParams();
   const locationParam = searchParams.get('location') || 'landing-page';
 
   // Phases: 'intro' | 'video' | 'reveal'
   const [phase, setPhase] = useState<'intro' | 'video' | 'reveal'>('intro');
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false); // Default unmuted (sound automatic)
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [detectedLocation, setDetectedLocation] = useState<string>('Detecting Location...');
 
   // Form State
   const [formData, setFormData] = useState({
@@ -96,7 +127,7 @@ function CheatedCampaignContent() {
     };
   }, [phase]);
 
-  // 2. 9:16 VIDEO SETUP & AUTO-PLAY
+  // 2. 9:16 VIDEO SETUP & AUTO-PLAY (Automatic Sound)
   useEffect(() => {
     if (phase !== 'video') return;
 
@@ -107,11 +138,11 @@ function CheatedCampaignContent() {
 
     const videoEl = videoRef.current;
     if (videoEl) {
-      videoEl.muted = isMuted;
+      videoEl.muted = isMuted; // Play with sound if user skipped intro, otherwise handles overlay
       videoEl.play()
         .then(() => setIsVideoPlaying(true))
         .catch(err => {
-          console.log("Autoplay blocked/failed, waiting for user interaction:", err);
+          console.log("Unmuted autoplay restricted by browser policies. Displaying interaction overlay.", err);
           setIsVideoPlaying(false);
         });
     }
@@ -138,9 +169,46 @@ function CheatedCampaignContent() {
     });
   };
 
-  // 4. REVEAL & INLINE FORM ANIMATIONS (GSAP)
+  // 4. REVEAL, GEOLOCATION & INLINE FORM ANIMATIONS
   useEffect(() => {
     if (phase !== 'reveal') return;
+
+    // Fetch poster location via user's physical GPS location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          console.log(`[Geolocation] Latitude: ${latitude}, Longitude: ${longitude}`);
+
+          // Determine closest location from predefined Pune posters
+          let closest = POSTER_LOCATIONS[0];
+          let minDistance = calculateDistance(latitude, longitude, closest.lat, closest.lng);
+
+          for (let i = 1; i < POSTER_LOCATIONS.length; i++) {
+            const distance = calculateDistance(latitude, longitude, POSTER_LOCATIONS[i].lat, POSTER_LOCATIONS[i].lng);
+            if (distance < minDistance) {
+              minDistance = distance;
+              closest = POSTER_LOCATIONS[i];
+            }
+          }
+
+          // If closest is within 6km, tag the location. Otherwise fallback gracefully.
+          if (minDistance <= 6.0) {
+            setDetectedLocation(closest.name);
+          } else {
+            setDetectedLocation(`${closest.name} (Nearby)`);
+          }
+        },
+        (error) => {
+          console.warn("[Geolocation] Failed to detect location:", error);
+          // Fallback to query tracking parameter or general tag
+          setDetectedLocation(locationParam === 'landing-page' ? 'General Scan (Location Blocked)' : locationParam);
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+      );
+    } else {
+      setDetectedLocation(locationParam === 'landing-page' ? 'General Scan' : locationParam);
+    }
 
     // Reset initial states of reveal page components
     gsap.set(brandHeaderRef.current, { opacity: 0, y: -20 });
@@ -154,7 +222,6 @@ function CheatedCampaignContent() {
 
     const tl = gsap.timeline();
 
-    // Smooth transition of document body color to deep indigo
     gsap.to('body', {
       backgroundColor: '#05031b',
       duration: 1.2,
@@ -208,11 +275,14 @@ function CheatedCampaignContent() {
     }
   };
 
-  // Play button override
+  // Play button overrides (triggers sound on click)
   const handlePlayVideo = () => {
     if (videoRef.current) {
-      videoRef.current.play();
-      setIsVideoPlaying(true);
+      videoRef.current.muted = false;
+      setIsMuted(false);
+      videoRef.current.play()
+        .then(() => setIsVideoPlaying(true))
+        .catch(err => console.error("Error playing video:", err));
     }
   };
 
@@ -241,7 +311,7 @@ function CheatedCampaignContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          location: locationParam
+          location: detectedLocation // Send the user's detected GPS location
         })
       });
 
@@ -294,8 +364,12 @@ function CheatedCampaignContent() {
             </h3>
           </div>
 
+          {/* Clicking this counts as interaction and enables immediate unmuted audio in next phase */}
           <button 
-            onClick={() => setPhase('video')}
+            onClick={() => {
+              setIsMuted(false); // Unmute immediately
+              setPhase('video');
+            }}
             className="absolute bottom-8 right-8 text-[10px] tracking-widest uppercase font-semibold text-gray-500 hover:text-white transition-colors duration-200"
           >
             Skip Intro ➔
@@ -331,15 +405,16 @@ function CheatedCampaignContent() {
               onEnded={handleTransitionToReveal}
             />
 
-            {/* Play Button Overlay (fallback if autoplay blocked) */}
+            {/* Play Button Overlay (fallback if autoplay unmuted blocked) */}
             {!isVideoPlaying && (
               <div 
                 onClick={handlePlayVideo}
-                className="absolute inset-0 flex items-center justify-center bg-black/70 cursor-pointer"
+                className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 cursor-pointer p-4 text-center"
               >
-                <div className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-full text-xs font-semibold tracking-wider transition-all duration-300 transform hover:scale-105 shadow-md shadow-red-600/30">
-                  ▶ Play Video
+                <div className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full text-xs font-bold tracking-wider transition-all duration-300 transform hover:scale-105 shadow-lg shadow-red-600/30 mb-2">
+                  🔊 Tap to Play with Audio
                 </div>
+                <p className="text-[10px] text-gray-400 max-w-[200px]">Browsers restrict unmuted autoplay without interaction.</p>
               </div>
             )}
 
@@ -357,7 +432,7 @@ function CheatedCampaignContent() {
                 ) : (
                   <>
                     <Volume2 size={14} className="text-teal-400" />
-                    <span className="text-[9px] uppercase font-mono tracking-wider">Muted: Off</span>
+                    <span className="text-[9px] uppercase font-mono tracking-wider">Sound: On</span>
                   </>
                 )}
               </button>
@@ -409,14 +484,14 @@ function CheatedCampaignContent() {
             </h1>
           </div>
 
-          {/* Location Tracking Badge */}
+          {/* Geolocation Poster Tracking Badge */}
           <div 
             ref={trackingBadgeRef}
             className="inline-flex items-center gap-1.5 bg-slate-900/60 border border-slate-800/80 px-3.5 py-1.5 rounded-full text-[10px] font-mono tracking-wider text-slate-400 mb-8"
           >
             <MapPin size={11} className="text-teal-400 animate-bounce" />
-            <span>Poster Location:</span>
-            <span className="text-teal-400 font-bold uppercase">{locationParam}</span>
+            <span>Detected Location:</span>
+            <span className="text-teal-400 font-bold uppercase">{detectedLocation}</span>
           </div>
 
           {/* Embedded Form (Directly inline on page) */}
