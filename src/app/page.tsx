@@ -87,11 +87,12 @@ function CheatedCampaignContent() {
 
     const tl = gsap.timeline({
       onComplete: () => {
-        // Fade out text lines, then show the play button to register gesture
+        // Fade out text lines after a delay to allow reading the subline, then show start button
         gsap.to([introLine1Ref.current, introLine2Ref.current, introLine3Ref.current], {
           opacity: 0,
           y: -20,
           duration: 0.6,
+          delay: 3.5, // Linger 3.5 seconds longer to read the subline
           stagger: 0.08,
           onComplete: () => {
             setShowStartBtn(true);
@@ -207,14 +208,38 @@ function CheatedCampaignContent() {
           }
         },
         (error) => {
-          console.warn("[Geolocation] Failed to detect location:", error);
-          // Fallback to query tracking parameter or general tag
-          setDetectedLocation(locationParam === 'landing-page' ? 'General Scan (Location Blocked)' : locationParam);
+          console.warn("[Geolocation] GPS denied/failed. Fetching IP fallback...", error);
+          setDetectedLocation("Fetching IP Location...");
+          fetch('https://ipapi.co/json/')
+            .then(res => res.json())
+            .then(data => {
+              if (data && data.city) {
+                setDetectedLocation(`${data.city} Region (IP-based)`);
+              } else {
+                setDetectedLocation(locationParam === 'landing-page' ? 'Pune Region' : locationParam);
+              }
+            })
+            .catch(ipErr => {
+              console.error("[Geolocation] IP lookup failed:", ipErr);
+              setDetectedLocation(locationParam === 'landing-page' ? 'General Scan' : locationParam);
+            });
         },
-        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     } else {
-      setDetectedLocation(locationParam === 'landing-page' ? 'General Scan' : locationParam);
+      // Fallback if Geolocation API is not supported by device
+      fetch('https://ipapi.co/json/')
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.city) {
+            setDetectedLocation(`${data.city} Region (IP-based)`);
+          } else {
+            setDetectedLocation(locationParam === 'landing-page' ? 'General Scan' : locationParam);
+          }
+        })
+        .catch(() => {
+          setDetectedLocation(locationParam === 'landing-page' ? 'General Scan' : locationParam);
+        });
     }
 
     // Reset initial states of reveal page components
@@ -373,33 +398,26 @@ function CheatedCampaignContent() {
             </div>
           ) : (
             <div className="flex flex-col items-center space-y-6">
+              <div className="text-center space-y-2">
+                <span className="text-[10px] uppercase text-red-500 tracking-widest font-black block animate-pulse">
+                  Action Required 🔊
+                </span>
+                <h2 className="text-lg md:text-xl font-bold text-gray-200 max-w-sm tracking-wide leading-snug">
+                  Click the button below to reveal the truth
+                </h2>
+              </div>
+              
               <button 
                 ref={startBtnRef}
                 onClick={() => {
                   setIsMuted(false);
                   setPhase('video');
                 }}
-                className="bg-red-650 hover:bg-red-700 text-white px-8 py-4 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 transform hover:scale-105 shadow-xl shadow-red-600/30 cursor-pointer"
+                className="bg-red-600 hover:bg-red-700 text-white px-12 py-5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-[0_0_35px_rgba(220,38,38,0.6)] border-2 border-red-500 hover:border-white cursor-pointer animate-pulse"
               >
-                Reveal the Truth 🔊
+                Reveal the Truth
               </button>
-              <p className="text-[11px] text-gray-500 max-w-[240px] tracking-wide leading-relaxed">
-                Click to play the teaser video unmuted.
-              </p>
             </div>
-          )}
-
-          {/* Clicking this counts as interaction and enables immediate unmuted audio in next phase */}
-          {!showStartBtn && (
-            <button 
-              onClick={() => {
-                setIsMuted(false); // Unmute immediately
-                setPhase('video');
-              }}
-              className="absolute bottom-8 right-8 text-[10px] tracking-widest uppercase font-semibold text-gray-500 hover:text-white transition-colors duration-200"
-            >
-              Skip Intro ➔
-            </button>
           )}
         </div>
       )}
@@ -423,11 +441,11 @@ function CheatedCampaignContent() {
           </div>
 
           {/* 9:16 Aspect Portrait Video Wrapper */}
-          <div className="relative w-full max-w-[340px] aspect-[9/16] max-h-[70vh] bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-800 shadow-2xl shadow-red-950/15 group">
+          <div className="relative w-full max-w-[340px] aspect-[9/16] max-h-[70vh] bg-black rounded-2xl overflow-hidden border border-neutral-900 shadow-2xl shadow-red-950/15 group">
             <video 
               ref={videoRef}
               src="https://letsenterprise.in/wp-content/uploads/2026/07/snapsave-app_3920737019386334940_7803899670.mp4"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain bg-black"
               playsInline
               onEnded={handleTransitionToReveal}
             />
@@ -436,7 +454,7 @@ function CheatedCampaignContent() {
             {!isVideoPlaying && (
               <div 
                 onClick={handlePlayVideo}
-                className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 cursor-pointer p-4 text-center"
+                className="absolute inset-0 flex flex-col items-center justify-center bg-black/85 cursor-pointer p-4 text-center"
               >
                 <div className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full text-xs font-bold tracking-wider transition-all duration-300 transform hover:scale-105 shadow-lg shadow-red-600/30 mb-2">
                   🔊 Tap to Play with Audio
@@ -449,7 +467,7 @@ function CheatedCampaignContent() {
             {isVideoPlaying && (
               <button 
                 onClick={toggleMute}
-                className="absolute bottom-4 right-4 z-20 bg-black/80 hover:bg-black text-white p-2.5 rounded-full transition-all duration-200 border border-neutral-700/40 shadow flex items-center gap-1.5"
+                className="absolute bottom-4 right-4 z-20 bg-black/85 hover:bg-black text-white p-2.5 rounded-full transition-all duration-200 border border-neutral-700/40 shadow flex items-center gap-1.5"
               >
                 {isMuted ? (
                   <>
@@ -466,15 +484,8 @@ function CheatedCampaignContent() {
             )}
           </div>
 
-          {/* Controls Footer */}
-          <div className="w-full flex justify-center">
-            <button 
-              onClick={handleTransitionToReveal}
-              className="flex items-center gap-1.5 px-5 py-2 rounded-full border border-neutral-800 hover:border-neutral-600 bg-neutral-950/50 text-[10px] font-bold tracking-widest uppercase transition-all duration-200 text-gray-400 hover:text-white"
-            >
-              Skip to Form ➔
-            </button>
-          </div>
+          {/* Spacer to balance header layout height vertically */}
+          <div className="h-10"></div>
         </div>
       )}
 
