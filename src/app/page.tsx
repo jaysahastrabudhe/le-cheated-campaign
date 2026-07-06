@@ -393,7 +393,7 @@ function CheatedCampaignContent() {
                 ref={introLine3Ref}
                 className="text-base md:text-xl text-gray-300 font-light tracking-wide leading-relaxed"
               >
-                when it said just BBA is a safe choice because...
+                when it said just a BBA is a safe choice because...
               </h3>
             </div>
           ) : (
