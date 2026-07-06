@@ -526,8 +526,8 @@ function CheatedCampaignContent() {
                   <span className="text-[10px] uppercase font-mono tracking-widest font-semibold">Instant Access Syllabus</span>
                 </div>
                 
-                <h2 className="text-lg font-black text-white tracking-tight uppercase leading-none">
-                  Take control of BBA
+                <h2 className="text-lg font-black text-white tracking-tight uppercase leading-snug">
+                  Fill this form to know what being a student here sounds like
                 </h2>
                 <p className="text-[11px] text-slate-400 leading-relaxed">
                   Enter details to download our Working BBA course structure, live semester modules, and relocations.
