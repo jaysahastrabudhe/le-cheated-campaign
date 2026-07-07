@@ -135,26 +135,31 @@ function CheatedCampaignContent() {
     }
   }, [showStartBtn]);
 
-  // 2. 9:16 VIDEO SETUP & AUTO-PLAY (Automatic Sound)
-  useEffect(() => {
-    if (phase !== 'video') return;
-
-    gsap.fromTo(videoContainerRef.current, 
-      { opacity: 0, scale: 0.95 },
-      { opacity: 1, scale: 1, duration: 0.8, ease: 'power2.out' }
-    );
+  // 2. FORCED UNMUTED VIDEO PLAYBACK HANDLER (Synchronous Interaction Thread)
+  const startVideoPlay = () => {
+    setIsMuted(false);
+    setPhase('video');
 
     const videoEl = videoRef.current;
     if (videoEl) {
-      videoEl.muted = isMuted; // Play with sound if user skipped intro, otherwise handles overlay
+      videoEl.muted = false;
       videoEl.play()
-        .then(() => setIsVideoPlaying(true))
+        .then(() => {
+          setIsVideoPlaying(true);
+          console.log("[Video] Synchronous play succeeded with audio!");
+        })
         .catch(err => {
-          console.log("Unmuted autoplay restricted by browser policies. Displaying interaction overlay.", err);
-          setIsVideoPlaying(false);
+          console.warn("[Video] Synchronous unmuted play failed. Fallback to muted autoplay:", err);
+          videoEl.muted = true;
+          videoEl.play()
+            .then(() => {
+              setIsVideoPlaying(true);
+              setIsMuted(true);
+            })
+            .catch(e => console.error("[Video] Muted autoplay failed:", e));
         });
     }
-  }, [phase]);
+  };
 
   // 3. TRANSITION TO FORM & REVEAL (GSAP)
   const handleTransitionToReveal = () => {
@@ -409,11 +414,8 @@ function CheatedCampaignContent() {
               
               <button 
                 ref={startBtnRef}
-                onClick={() => {
-                  setIsMuted(false);
-                  setPhase('video');
-                }}
-                className="bg-red-600 hover:bg-red-700 text-white px-12 py-5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-[0_0_35px_rgba(220,38,38,0.6)] border-2 border-red-500 hover:border-white cursor-pointer animate-pulse"
+                onClick={startVideoPlay}
+                className="bg-red-650 hover:bg-red-700 text-white px-12 py-5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-[0_0_35px_rgba(220,38,38,0.6)] border-2 border-red-500 hover:border-white cursor-pointer animate-pulse"
               >
                 Reveal the Truth
               </button>
@@ -425,11 +427,14 @@ function CheatedCampaignContent() {
       {/* ──────────────────────────────────────────────────────── */}
       {/* PHASE 1: MOBILE-FIRST 9:16 VIDEO PLAYER */}
       {/* ──────────────────────────────────────────────────────── */}
-      {phase === 'video' && (
-        <div 
-          ref={videoContainerRef}
-          className="fixed inset-0 z-40 bg-black flex flex-col items-center justify-between py-6 px-4"
-        >
+      <div 
+        ref={videoContainerRef}
+        className={`fixed inset-0 z-40 bg-black flex flex-col items-center justify-between py-6 px-4 transition-all duration-500 ${
+          phase === 'video' 
+            ? 'opacity-100 pointer-events-auto visible scale-100' 
+            : 'opacity-0 pointer-events-none invisible scale-95'
+        }`}
+      >
           {/* Header */}
           <div className="text-center w-full">
             <h2 className="text-md md:text-lg font-light text-gray-300">
@@ -487,7 +492,6 @@ function CheatedCampaignContent() {
           {/* Spacer to balance header layout height vertically */}
           <div className="h-10"></div>
         </div>
-      )}
 
       {/* ──────────────────────────────────────────────────────── */}
       {/* PHASE 2: BRAND REVEAL & INLINE FORM */}
