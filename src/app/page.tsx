@@ -432,9 +432,6 @@ function CheatedCampaignContent() {
         >
           {/* Header */}
           <div className="text-center w-full">
-            <span className="text-[10px] tracking-widest text-red-500/80 font-bold uppercase block mb-1">
-              Guerrilla Teaser Reveal
-            </span>
             <h2 className="text-md md:text-lg font-light text-gray-300">
               Your School Cheated On You.
             </h2>
@@ -444,7 +441,7 @@ function CheatedCampaignContent() {
           <div className="relative w-full max-w-[340px] aspect-[9/16] max-h-[70vh] bg-black rounded-2xl overflow-hidden border border-neutral-900 shadow-2xl shadow-red-950/15 group">
             <video 
               ref={videoRef}
-              src="https://letsenterprise.in/wp-content/uploads/2026/07/snapsave-app_3920737019386334940_7803899670.mp4"
+              src="https://letsenterprise.in/wp-content/uploads/2026/07/adi_main_video.mov"
               className="w-full h-full object-contain bg-black"
               playsInline
               onEnded={handleTransitionToReveal}
