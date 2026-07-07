@@ -455,7 +455,7 @@ function CheatedCampaignContent() {
                 setVideoLoadError(true);
               }}
             >
-              <source src="https://letsenterprise.in/wp-content/uploads/2026/07/adi_main_video.mp4" type="video/mp4" />
+              <source src="https://letsenterprise.in/wp-content/uploads/2026/07/adivideomaincompressed.mp4" type="video/mp4" />
               <source src="https://letsenterprise.in/wp-content/uploads/2026/07/adi_main_video.mov" type="video/quicktime" />
               Your browser does not support the video tag.
             </video>
