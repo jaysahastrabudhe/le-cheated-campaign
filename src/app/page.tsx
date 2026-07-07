@@ -441,11 +441,14 @@ function CheatedCampaignContent() {
           <div className="relative w-full max-w-[340px] aspect-[9/16] max-h-[70vh] bg-black rounded-2xl overflow-hidden border border-neutral-900 shadow-2xl shadow-red-950/15 group">
             <video 
               ref={videoRef}
-              src="https://letsenterprise.in/wp-content/uploads/2026/07/adi_main_video.mov"
               className="w-full h-full object-contain bg-black"
               playsInline
               onEnded={handleTransitionToReveal}
-            />
+            >
+              <source src="https://letsenterprise.in/wp-content/uploads/2026/07/adi_main_video.mp4" type="video/mp4" />
+              <source src="https://letsenterprise.in/wp-content/uploads/2026/07/adi_main_video.mov" type="video/quicktime" />
+              Your browser does not support the video tag.
+            </video>
 
             {/* Play Button Overlay (fallback if autoplay unmuted blocked) */}
             {!isVideoPlaying && (
