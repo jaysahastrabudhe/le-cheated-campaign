@@ -52,7 +52,7 @@ function CheatedCampaignContent() {
     name: '',
     phone: '',
     email: '',
-    city: '',
+    city: 'Pune', // Default to Pune since it's a Pune-centric poster campaign
     stream: '',
     persona: 'Student' as 'Student' | 'Parent'
   });
@@ -331,16 +331,54 @@ function CheatedCampaignContent() {
     setErrorMsg('');
 
     // Field check
-    if (!formData.name.trim() || !formData.phone.trim() || !formData.city.trim() || !formData.stream) {
+    if (!formData.name.trim() || !formData.phone.trim() || !formData.stream) {
       setErrorMsg('Please fill in all required fields.');
       setIsSubmitting(false);
       return;
     }
 
-    if (formData.phone.replace(/\D/g, '').length < 10) {
-      setErrorMsg('Please enter a valid 10-digit mobile number.');
+    // Phone validation (Indian mobile number: standard 10 digits starting with 6,7,8,9, never 0)
+    let rawPhone = formData.phone.trim().replace(/\D/g, '');
+    if (rawPhone.startsWith('91') && rawPhone.length > 10) {
+      rawPhone = rawPhone.slice(2);
+    }
+    
+    const indianPhoneRegex = /^[6-9]\d{9}$/;
+    if (!indianPhoneRegex.test(rawPhone)) {
+      setErrorMsg('Please enter a valid 10-digit Indian mobile number (should start with 6, 7, 8, or 9 and never start with 0).');
       setIsSubmitting(false);
       return;
+    }
+
+    // Email validation & fake check
+    if (formData.email) {
+      const emailLower = formData.email.trim().toLowerCase();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(emailLower)) {
+        setErrorMsg('Please enter a valid email address.');
+        setIsSubmitting(false);
+        return;
+      }
+      
+      const [user, domain] = emailLower.split('@');
+      const fakeDomains = ['test.com', 'example.com', 'temp.com', 'fake.com', 'testing.com', 'asd.com', 'asdf.com', 'xyz.com', 'abc.com', 'gamil.com', 'gmal.com', 'yaho.com'];
+      const fakeUsers = ['test', 'testing', 'admin', 'asd', 'asdf', 'abcd', 'xyz', 'dummy', 'temp'];
+      
+      if (fakeDomains.includes(domain) || fakeUsers.includes(user) || user.length < 2 || /^(\w)\1+$/.test(user)) {
+        setErrorMsg('Please enter a genuine email address.');
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
+    // Dynamic city fallback from detected location
+    let submitCity = formData.city;
+    if (detectedLocation && detectedLocation !== 'Detecting Location...') {
+      // If we got an IP city like "Mumbai Region (IP-based)", extract "Mumbai"
+      const ipMatch = detectedLocation.match(/^([^,Region]+)\s+Region/);
+      if (ipMatch && ipMatch[1]) {
+        submitCity = ipMatch[1].trim();
+      }
     }
 
     try {
@@ -349,6 +387,7 @@ function CheatedCampaignContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          city: submitCity,
           location: detectedLocation // Send the user's detected GPS location
         })
       });
@@ -685,18 +724,7 @@ function CheatedCampaignContent() {
                     </div>
                   </div>
 
-                  {/* City */}
-                  <div className="space-y-1">
-                    <label className="text-[9px] uppercase font-mono tracking-wider text-slate-400">City *</label>
-                    <input 
-                      type="text"
-                      required
-                      placeholder="e.g. Pune"
-                      value={formData.city}
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 transition-colors placeholder-slate-750"
-                    />
-                  </div>
+
 
                   {/* Error Notification */}
                   {errorMsg && (

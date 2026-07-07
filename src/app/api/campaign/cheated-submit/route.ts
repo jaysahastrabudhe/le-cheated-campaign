@@ -26,12 +26,33 @@ export async function POST(req: NextRequest) {
 
     const { name, phone, email, city, stream, persona, location } = validation.data;
 
-    // Normalise phone number to +91XXXXXXXXXX
-    const phoneNum = String(phone).replace(/\D/g, '');
-    if (phoneNum.length < 10) {
-      return NextResponse.json({ error: 'Phone number must be at least 10 digits' }, { status: 400 });
+    // Normalise phone number to +91XXXXXXXXXX and validate Indian format
+    let rawPhone = String(phone).replace(/\D/g, '');
+    if (rawPhone.startsWith('91') && rawPhone.length > 10) {
+      rawPhone = rawPhone.slice(2);
     }
-    const cleanPhone = phoneNum.startsWith('91') ? `+${phoneNum}` : (phoneNum.length === 10 ? `+91${phoneNum}` : `+${phoneNum}`);
+    const indianPhoneRegex = /^[6-9]\d{9}$/;
+    if (!indianPhoneRegex.test(rawPhone)) {
+      return NextResponse.json({ error: 'Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.' }, { status: 400 });
+    }
+    const cleanPhone = `+91${rawPhone}`;
+
+    // Validate fake emails
+    if (email) {
+      const emailLower = email.trim().toLowerCase();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(emailLower)) {
+        return NextResponse.json({ error: 'Invalid email address structure' }, { status: 400 });
+      }
+
+      const [user, domain] = emailLower.split('@');
+      const fakeDomains = ['test.com', 'example.com', 'temp.com', 'fake.com', 'testing.com', 'asd.com', 'asdf.com', 'xyz.com', 'abc.com', 'gamil.com', 'gmal.com', 'yaho.com'];
+      const fakeUsers = ['test', 'testing', 'admin', 'asd', 'asdf', 'abcd', 'xyz', 'dummy', 'temp'];
+
+      if (fakeDomains.includes(domain) || fakeUsers.includes(user) || user.length < 2 || /^(\w)\1+$/.test(user)) {
+        return NextResponse.json({ error: 'Please provide a genuine email address' }, { status: 400 });
+      }
+    }
 
     // Split Name into First_Name and Last_Name
     const nameParts = (name || '').trim().split(/\s+/);
