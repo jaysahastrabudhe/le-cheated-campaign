@@ -379,7 +379,7 @@ function CheatedCampaignContent() {
             <div className="max-w-xl space-y-5">
               <h1 
                 ref={introLine1Ref}
-                className="text-lg md:text-xl text-gray-400 font-medium tracking-tight"
+                className="text-3xl md:text-5xl text-white font-extrabold uppercase tracking-tighter"
               >
                 Your school
               </h1>
@@ -690,11 +690,11 @@ function CheatedCampaignContent() {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
-                        Sending to WhatsApp...
+                        Booking details...
                       </span>
                     ) : (
                       <>
-                        <span>Get Syllabus on WhatsApp</span>
+                        <span>Book a Call & Learn More</span>
                         <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform duration-200" />
                       </>
                     )}
