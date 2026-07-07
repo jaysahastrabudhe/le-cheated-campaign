@@ -45,6 +45,7 @@ function CheatedCampaignContent() {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [detectedLocation, setDetectedLocation] = useState<string>('Detecting Location...');
   const [showStartBtn, setShowStartBtn] = useState(false);
+  const [videoLoadError, setVideoLoadError] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -449,6 +450,10 @@ function CheatedCampaignContent() {
               className="w-full h-full object-contain bg-black"
               playsInline
               onEnded={handleTransitionToReveal}
+              onError={() => {
+                console.error("[Video] Failed to load any of the video sources.");
+                setVideoLoadError(true);
+              }}
             >
               <source src="https://letsenterprise.in/wp-content/uploads/2026/07/adi_main_video.mp4" type="video/mp4" />
               <source src="https://letsenterprise.in/wp-content/uploads/2026/07/adi_main_video.mov" type="video/quicktime" />
@@ -456,7 +461,7 @@ function CheatedCampaignContent() {
             </video>
 
             {/* Play Button Overlay (fallback if autoplay unmuted blocked) */}
-            {!isVideoPlaying && (
+            {!isVideoPlaying && !videoLoadError && (
               <div 
                 onClick={handlePlayVideo}
                 className="absolute inset-0 flex flex-col items-center justify-center bg-black/85 cursor-pointer p-4 text-center"
@@ -465,6 +470,25 @@ function CheatedCampaignContent() {
                   🔊 Tap to Play with Audio
                 </div>
                 <p className="text-[10px] text-gray-400 max-w-[200px]">Browsers restrict unmuted autoplay without interaction.</p>
+              </div>
+            )}
+
+            {/* Load Error Fallback Overlay */}
+            {videoLoadError && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-neutral-950 p-6 text-center z-30">
+                <AlertCircle size={28} className="text-red-500 mb-2 animate-bounce" />
+                <h3 className="text-xs font-bold text-white mb-1 uppercase tracking-wider">
+                  Video Load Error
+                </h3>
+                <p className="text-[10px] text-gray-400 max-w-[220px] leading-relaxed mb-4">
+                  The browser cannot decode this format. Please upload the converted (.mp4) version of the video to Hostinger.
+                </p>
+                <button 
+                  onClick={handleTransitionToReveal}
+                  className="px-4 py-2 border border-neutral-800 hover:border-neutral-700 bg-neutral-900 rounded-lg text-[9px] uppercase tracking-widest font-semibold text-gray-400 hover:text-white transition-all cursor-pointer"
+                >
+                  Skip to Form ➔
+                </button>
               </div>
             )}
 
