@@ -54,6 +54,7 @@ function CheatedCampaignContent() {
   const [isMuted, setIsMuted] = useState(false); // Default unmuted (sound automatic)
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [detectedLocation, setDetectedLocation] = useState<string>('Detecting Location...');
+  const [coordinates, setCoordinates] = useState<{lat: number, lng: number} | null>(null);
   const [showStartBtn, setShowStartBtn] = useState(false);
   const [videoLoadError, setVideoLoadError] = useState(false);
 
@@ -104,6 +105,7 @@ function CheatedCampaignContent() {
         .then(res => res.json())
         .then(data => {
           if (data && data.city) {
+            mixpanel.register({ ip_city: data.city, ip_region: data.region });
             mixpanel.track('location_detected', {
               city: data.city,
               region: data.region,
@@ -254,11 +256,33 @@ function CheatedCampaignContent() {
             }
           }
 
+          // Set raw coordinates for Mixpanel and internal tracking
+          setCoordinates({ lat: latitude, lng: longitude });
+
+          // Fire Mixpanel gps_resolved event and register as super properties
+          try {
+            mixpanel.register({
+              detected_location: closest.name,
+              latitude: parseFloat(latitude.toFixed(6)),
+              longitude: parseFloat(longitude.toFixed(6))
+            });
+            mixpanel.track('gps_resolved', {
+              latitude,
+              longitude,
+              accuracy: position.coords.accuracy,
+              resolved_location: closest.name,
+              distance_km: minDistance
+            });
+          } catch (mpErr) {
+            console.error("[Mixpanel] GPS resolved track error:", mpErr);
+          }
+
           // If closest is within 6km, tag the location. Otherwise fallback gracefully.
+          const coordStr = `(GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}, Acc: ${position.coords.accuracy.toFixed(0)}m)`;
           if (minDistance <= 6.0) {
-            setDetectedLocation(closest.name);
+            setDetectedLocation(`${closest.name} ${coordStr}`);
           } else {
-            setDetectedLocation(`${closest.name} (Nearby)`);
+            setDetectedLocation(`${closest.name} (Nearby) ${coordStr}`);
           }
         },
         (error) => {
@@ -269,6 +293,12 @@ function CheatedCampaignContent() {
             .then(data => {
               if (data && data.city) {
                 setDetectedLocation(`${data.city} Region (IP-based)`);
+                mixpanel.register({ detected_location: data.city });
+                mixpanel.track('location_detected', {
+                  city: data.city,
+                  region: data.region,
+                  method: 'ip_fallback'
+                });
               } else {
                 setDetectedLocation(locationParam === 'landing-page' ? 'Pune Region' : locationParam);
               }
@@ -287,6 +317,12 @@ function CheatedCampaignContent() {
         .then(data => {
           if (data && data.city) {
             setDetectedLocation(`${data.city} Region (IP-based)`);
+            mixpanel.register({ detected_location: data.city });
+            mixpanel.track('location_detected', {
+              city: data.city,
+              region: data.region,
+              method: 'ip_no_gps'
+            });
           } else {
             setDetectedLocation(locationParam === 'landing-page' ? 'General Scan' : locationParam);
           }
@@ -458,7 +494,9 @@ function CheatedCampaignContent() {
           'City': submitCity,
           'Stream': formData.stream,
           'Persona': formData.persona,
-          'Location': detectedLocation
+          'Location': detectedLocation,
+          'Latitude': coordinates?.lat,
+          'Longitude': coordinates?.lng
         });
         mixpanel.track('sign_up_completed', {
           sign_up_method: 'web_form',
@@ -466,7 +504,9 @@ function CheatedCampaignContent() {
           stream: formData.stream,
           persona: formData.persona,
           location: detectedLocation,
-          city: submitCity
+          city: submitCity,
+          latitude: coordinates?.lat,
+          longitude: coordinates?.lng
         });
       } catch (mpErr) {
         console.error("[Mixpanel] Failed to send tracking data:", mpErr);
