@@ -4,6 +4,16 @@ import React, { useEffect, useRef, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Volume2, VolumeX, ArrowRight, CheckCircle2, AlertCircle, Sparkles, MapPin } from 'lucide-react';
 import gsap from 'gsap';
+import mixpanel from 'mixpanel-browser';
+
+// Initialize Mixpanel client-side
+if (typeof window !== 'undefined') {
+  mixpanel.init('fe5f9d1185db08298ab1178b0a7dd4b3', {
+    debug: process.env.NODE_ENV !== 'production',
+    track_pageview: true,
+    persistence: 'localStorage'
+  });
+}
 
 interface LocationItem {
   name: string;
@@ -141,6 +151,9 @@ function CheatedCampaignContent() {
     setIsMuted(false);
     setPhase('video');
 
+    // Mixpanel event
+    mixpanel.track('reveal_clicked');
+
     const videoEl = videoRef.current;
     if (videoEl) {
       videoEl.muted = false;
@@ -148,6 +161,7 @@ function CheatedCampaignContent() {
         .then(() => {
           setIsVideoPlaying(true);
           console.log("[Video] Synchronous play succeeded with audio!");
+          mixpanel.track('video_started');
         })
         .catch(err => {
           console.warn("[Video] Synchronous unmuted play failed. Fallback to muted autoplay:", err);
@@ -156,6 +170,7 @@ function CheatedCampaignContent() {
             .then(() => {
               setIsVideoPlaying(true);
               setIsMuted(true);
+              mixpanel.track('video_started', { muted: true });
             })
             .catch(e => console.error("[Video] Muted autoplay failed:", e));
         });
@@ -167,6 +182,9 @@ function CheatedCampaignContent() {
     if (videoRef.current) {
       videoRef.current.pause();
     }
+
+    // Mixpanel event
+    mixpanel.track('video_ended');
 
     const tl = gsap.timeline({
       onComplete: () => {
@@ -398,6 +416,31 @@ function CheatedCampaignContent() {
       }
 
       setIsSuccess(true);
+
+      // Mixpanel Identity & Tracking
+      try {
+        const cleanPhone = `+91${rawPhone}`;
+        mixpanel.identify(cleanPhone);
+        mixpanel.people.set({
+          $name: formData.name,
+          $email: formData.email || undefined,
+          $phone: cleanPhone,
+          'City': submitCity,
+          'Stream': formData.stream,
+          'Persona': formData.persona,
+          'Location': detectedLocation
+        });
+        mixpanel.track('sign_up_completed', {
+          sign_up_method: 'web_form',
+          platform: 'web',
+          stream: formData.stream,
+          persona: formData.persona,
+          location: detectedLocation,
+          city: submitCity
+        });
+      } catch (mpErr) {
+        console.error("[Mixpanel] Failed to send tracking data:", mpErr);
+      }
       
       // Scroll smoothly to top of success screen on mobile
       window.scrollTo({ top: 0, behavior: 'smooth' });
