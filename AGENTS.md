@@ -88,6 +88,8 @@ These are the Mixpanel events currently tracked in this project.
 
 | Mixpanel Event | Trigger | Key Properties | File |
 |---|---|---|---|
+| `page_visited` | Page loads/mounts initially | none (inherits super properties) | [page.tsx](file:///C:/Users/jaysa/Downloads/le-cheated-campaign/src/app/page.tsx) |
+| `location_detected` | IP-based location resolved in background on load | `city`, `region`, `ip` | [page.tsx](file:///C:/Users/jaysa/Downloads/le-cheated-campaign/src/app/page.tsx) |
 | `reveal_clicked` | User clicks the "Reveal the Truth" button on intro screen | none | [page.tsx](file:///C:/Users/jaysa/Downloads/le-cheated-campaign/src/app/page.tsx) |
 | `video_started` | Vertical video playback begins successfully | `muted` (optional boolean) | [page.tsx](file:///C:/Users/jaysa/Downloads/le-cheated-campaign/src/app/page.tsx) |
 | `video_ended` | Vertical video playback finishes and transitions to form | none | [page.tsx](file:///C:/Users/jaysa/Downloads/le-cheated-campaign/src/app/page.tsx) |

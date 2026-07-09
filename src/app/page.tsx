@@ -87,6 +87,36 @@ function CheatedCampaignContent() {
   const formCardRef = useRef<HTMLDivElement>(null);
   const valuePropsRef = useRef<HTMLDivElement>(null);
 
+  // Mixpanel Page View & URL Location tracking on mount
+  useEffect(() => {
+    try {
+      // Register URL Location as a persistent super property so it attaches to all subsequent events
+      mixpanel.register({
+        url_location: locationParam,
+        platform: 'web'
+      });
+
+      // Track the initial page view / visit
+      mixpanel.track('page_visited');
+
+      // Silently fetch IP-based location in the background (No browser pop-up prompt)
+      fetch('https://ipapi.co/json/')
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.city) {
+            mixpanel.track('location_detected', {
+              city: data.city,
+              region: data.region,
+              ip: data.ip
+            });
+          }
+        })
+        .catch(() => {});
+    } catch (err) {
+      console.error("[Mixpanel Mount Init] Failed:", err);
+    }
+  }, [locationParam]);
+
   // 1. INTRO TEXT ANIMATION (GSAP)
   useEffect(() => {
     if (phase !== 'intro') return;
