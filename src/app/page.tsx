@@ -233,6 +233,17 @@ function CheatedCampaignContent() {
     });
   };
 
+  const handleSkipVideo = () => {
+    const currentTime = videoRef.current?.currentTime ?? 0;
+    const duration = videoRef.current?.duration ?? 0;
+    mixpanel.track('video_skipped', {
+      skipped_at_seconds: parseFloat(currentTime.toFixed(1)),
+      video_duration_seconds: parseFloat(duration.toFixed(1)),
+      percent_watched: duration > 0 ? parseFloat(((currentTime / duration) * 100).toFixed(1)) : 0
+    });
+    handleTransitionToReveal();
+  };
+
   // 4. REVEAL, GEOLOCATION & INLINE FORM ANIMATIONS
   useEffect(() => {
     if (phase !== 'reveal') return;
@@ -665,8 +676,13 @@ function CheatedCampaignContent() {
             )}
           </div>
 
-          {/* Spacer to balance header layout height vertically */}
-          <div className="h-10"></div>
+          {/* Skip button */}
+          <button
+            onClick={handleSkipVideo}
+            className="text-[11px] text-gray-500 hover:text-gray-300 transition-colors duration-200 tracking-wider uppercase underline underline-offset-4 cursor-pointer"
+          >
+            Skip Video ➔
+          </button>
         </div>
 
       {/* ──────────────────────────────────────────────────────── */}

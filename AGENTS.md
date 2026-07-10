@@ -90,10 +90,12 @@ These are the Mixpanel events currently tracked in this project.
 |---|---|---|---|
 | `page_visited` | Page loads/mounts initially | none (inherits super properties) | [page.tsx](file:///C:/Users/jaysa/Downloads/le-cheated-campaign/src/app/page.tsx) |
 | `location_detected` | IP-based location resolved in background on load | `city`, `region`, `ip` | [page.tsx](file:///C:/Users/jaysa/Downloads/le-cheated-campaign/src/app/page.tsx) |
+| `gps_resolved` | Precision GPS location fetched and resolved | `latitude`, `longitude`, `accuracy`, `resolved_location`, `distance_km` | [page.tsx](file:///C:/Users/jaysa/Downloads/le-cheated-campaign/src/app/page.tsx) |
 | `reveal_clicked` | User clicks the "Reveal the Truth" button on intro screen | none | [page.tsx](file:///C:/Users/jaysa/Downloads/le-cheated-campaign/src/app/page.tsx) |
 | `video_started` | Vertical video playback begins successfully | `muted` (optional boolean) | [page.tsx](file:///C:/Users/jaysa/Downloads/le-cheated-campaign/src/app/page.tsx) |
 | `video_ended` | Vertical video playback finishes and transitions to form | none | [page.tsx](file:///C:/Users/jaysa/Downloads/le-cheated-campaign/src/app/page.tsx) |
-| `sign_up_completed` | User successfully submits the lead capture form | `sign_up_method`, `platform`, `stream`, `persona`, `location`, `city` | [page.tsx](file:///C:/Users/jaysa/Downloads/le-cheated-campaign/src/app/page.tsx) |
+| `video_skipped` | User taps "Skip Video" before playback finishes | `skipped_at_seconds`, `video_duration_seconds`, `percent_watched` | [page.tsx](file:///C:/Users/jaysa/Downloads/le-cheated-campaign/src/app/page.tsx) |
+| `sign_up_completed` | User successfully submits the lead capture form | `sign_up_method`, `platform`, `stream`, `persona`, `location`, `city`, `latitude`, `longitude` | [page.tsx](file:///C:/Users/jaysa/Downloads/le-cheated-campaign/src/app/page.tsx) |
 
 ---
 
