@@ -761,10 +761,10 @@ function CheatedCampaignContent() {
                 </div>
                 
                 <h2 className="text-lg font-black text-white tracking-tight uppercase leading-snug">
-                  Fill this form to know what being a student here sounds like
+                  Get the full syllabus on WhatsApp — right now
                 </h2>
                 <p className="text-[11px] text-slate-400 leading-relaxed">
-                  Enter details to download our Working BBA course structure, live semester modules, and relocations.
+                  Name + number is all we need. Syllabus, semester breakdown, and fee structure lands on WhatsApp in under 2 minutes.
                 </p>
 
                 <form onSubmit={handleFormSubmit} className="space-y-3.5 pt-2">
@@ -820,18 +820,6 @@ function CheatedCampaignContent() {
                     />
                   </div>
 
-                  {/* Email */}
-                  <div className="space-y-1">
-                    <label className="text-[9px] uppercase font-mono tracking-wider text-slate-400">Email Address</label>
-                    <input 
-                      type="email"
-                      placeholder="rahul@example.com"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 transition-colors placeholder-slate-750"
-                    />
-                  </div>
-
                   {/* Stream Select */}
                   <div className="space-y-1">
                     <label className="text-[9px] uppercase font-mono tracking-wider text-slate-400">Which stream are you in? *</label>
@@ -882,7 +870,7 @@ function CheatedCampaignContent() {
                       </span>
                     ) : (
                       <>
-                        <span>Book a Call & Learn More</span>
+                        <span>Send Syllabus to WhatsApp</span>
                         <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform duration-200" />
                       </>
                     )}
