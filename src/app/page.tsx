@@ -757,14 +757,14 @@ function CheatedCampaignContent() {
               <div className="space-y-4">
                 <div className="flex items-center gap-1.5 text-teal-400 mb-1">
                   <Sparkles size={14} className="animate-pulse" />
-                  <span className="text-[10px] uppercase font-mono tracking-widest font-semibold">Instant Access Syllabus</span>
+                  <span className="text-[10px] uppercase font-mono tracking-widest font-semibold">The Real Curriculum</span>
                 </div>
-                
+
                 <h2 className="text-lg font-black text-white tracking-tight uppercase leading-snug">
-                  Get the full syllabus on WhatsApp — right now
+                  This is what they should have taught you.
                 </h2>
                 <p className="text-[11px] text-slate-400 leading-relaxed">
-                  Name + number is all we need. Syllabus, semester breakdown, and fee structure lands on WhatsApp in under 2 minutes.
+                  Leave your name and number. In 2 minutes you&apos;ll get the full Let&apos;s Enterprise breakdown on WhatsApp — real projects, actual clients, and what graduates earn.
                 </p>
 
                 <form onSubmit={handleFormSubmit} className="space-y-3.5 pt-2">
@@ -870,7 +870,7 @@ function CheatedCampaignContent() {
                       </span>
                     ) : (
                       <>
-                        <span>Send Syllabus to WhatsApp</span>
+                        <span>Show me what I&apos;ve been missing</span>
                         <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform duration-200" />
                       </>
                     )}
